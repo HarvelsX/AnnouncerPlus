@@ -57,7 +57,10 @@ class PlaceholderAPIMiniMessagePreprocessor(private val miniMessage: MiniMessage
       if (match == replaced || !LegacyChecker.containsLegacy(replaced)) {
         matcher.appendReplacement(buffer, Matcher.quoteReplacement(replaced))
       } else {
-        matcher.appendReplacement(buffer, Matcher.quoteReplacement(miniMessage.serialize(LegacyComponentSerializer.legacySection().deserialize(replaced))))
+        val component = LegacyComponentSerializer.legacySection().deserialize(
+          replaced.replace(LegacyComponentSerializer.AMPERSAND_CHAR, LegacyComponentSerializer.SECTION_CHAR),
+        )
+        matcher.appendReplacement(buffer, Matcher.quoteReplacement(miniMessage.serialize(component)))
       }
     }
     matcher.appendTail(buffer)
