@@ -27,10 +27,19 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import java.util.logging.Logger
 
 class LegacyChecker(private val logger: Logger) {
-  private companion object {
+  companion object {
     private const val DISABLE_LEGACY_CHECK_PROPERTY_NAME = "AnnouncerPlus.disableLegacyCheck"
-    private const val SECTION_SYMBOL_STRING = LegacyComponentSerializer.SECTION_CHAR.toString()
     private const val EMPTY_STRING = ""
+    private val SECTION_SYMBOLS = listOf(
+      LegacyComponentSerializer.SECTION_CHAR,
+      LegacyComponentSerializer.AMPERSAND_CHAR,
+      LegacyComponentSerializer.HEX_CHAR
+    ).map { it.toString() }
+
+    @JvmStatic
+    fun containsLegacy(message: String): Boolean {
+      return SECTION_SYMBOLS.any { message.contains(it) }
+    }
   }
 
   private val legacyCheck = run {
@@ -42,9 +51,9 @@ class LegacyChecker(private val logger: Logger) {
   }
 
   fun check(message: String): String {
-    if (legacyCheck && message.contains(LegacyComponentSerializer.SECTION_CHAR)) {
+    if (legacyCheck && containsLegacy(message)) {
       logger.warning("Legacy color codes have been detected in a message. This is not supported behavior. Message: '${message.replace(LegacyComponentSerializer.SECTION_CHAR, LegacyComponentSerializer.AMPERSAND_CHAR)}'") // todo: fix paper logging so we don't need to replace here
-      return message.replace(SECTION_SYMBOL_STRING, EMPTY_STRING)
+      return SECTION_SYMBOLS.fold(message) { str, symbol -> str.replace(symbol, EMPTY_STRING) }
     }
     return message
   }
